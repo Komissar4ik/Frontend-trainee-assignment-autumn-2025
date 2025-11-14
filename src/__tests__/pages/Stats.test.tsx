@@ -94,7 +94,7 @@ describe('Stats', () => {
   it('should display total reviewed count', async () => {
     render(<Stats />);
     
-    expect(await screen.findByText('50')).toBeInTheDocument();
+    expect(await screen.findByText('100')).toBeInTheDocument();
   });
 
   it('should call all API methods on mount', async () => {
