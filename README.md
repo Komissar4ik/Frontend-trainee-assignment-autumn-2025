@@ -5,10 +5,10 @@
 ## Быстрый старт
 
 # Сначала требуется скачать репозиторий
-git clone [[ссылка на репозиторий из GitHub]](https://github.com/Komissar4ik/Frontend-trainee-assignment-autumn-2025.git)
+git clone https://github.com/Komissar4ik/Frontend-trainee-assignment-autumn-2025.git
 
 # Перейти в папку
-cd [путь до папки]
+cd Frontend-trainee-assignment-autumn-2025
 
 ### С Docker (рекомендуется)
 > **Требуется:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
