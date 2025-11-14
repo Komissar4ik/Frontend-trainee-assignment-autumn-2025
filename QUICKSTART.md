@@ -1,0 +1,73 @@
+# Быстрый запуск проекта
+
+## 🐳 Запуск с Docker (рекомендуется)
+
+> **Важно:** Для работы с Docker необходимо установить [Docker Desktop](https://www.docker.com/products/docker-desktop/) для Windows.
+Также для начала откройте папку проекта в терминале 
+
+### Production режим
+# Для новых версий Docker (рекомендуется)
+docker compose up --build
+
+# Для старых версий (если docker compose не работает)
+docker-compose up --build
+
+### Development режим (с hot reload)
+# Для новых версий Docker
+docker compose -f docker-compose.dev.yml up --build
+
+# Для старых версий
+docker-compose -f docker-compose.dev.yml up --build
+
+**После запуска:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:3001
+
+**Остановка:**
+docker compose down
+# или для старых версий: docker-compose down
+
+
+## 💻 Локальный запуск (без Docker)
+
+### 1. Установка зависимостей
+npm install
+
+### 2. Запуск Backend API
+cd tech-int3-server
+npm install
+npm start
+API будет доступен на http://localhost:3001
+
+### 3. Запуск Frontend (в новом терминале)
+npm run dev
+Приложение будет доступно на http://localhost:3000
+
+## 🧪 Тестирование
+
+# Запуск тестов
+npm test
+
+# Тесты с покрытием
+npm run test:coverage
+
+# Тесты в watch режиме
+npm run test:watch
+
+
+## 📦 Сборка для production
+
+npm run build
+
+
+## ⚡ Полезные команды
+
+# Просмотр логов Docker
+docker compose logs -f
+
+# Пересборка образов
+docker compose build --no-cache
+
+# Очистка Docker
+docker compose down -v
+

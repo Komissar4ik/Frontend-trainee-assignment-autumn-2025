@@ -1,0 +1,77 @@
+.button {
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.button.small {
+  padding: 6px 12px;
+  font-size: 14px;
+}
+
+.button.medium {
+  padding: 10px 20px;
+  font-size: 16px;
+}
+
+.button.large {
+  padding: 14px 28px;
+  font-size: 18px;
+}
+
+.button.primary {
+  background-color: var(--primary);
+  color: white;
+}
+
+.button.primary:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.button.secondary {
+  background-color: var(--secondary);
+  color: white;
+}
+
+.button.secondary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.button.danger {
+  background-color: var(--danger);
+  color: white;
+}
+
+.button.danger:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.button.success {
+  background-color: var(--success);
+  color: white;
+}
+
+.button.success:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.button.warning {
+  background-color: var(--warning);
+  color: #212529;
+}
+
+.button.warning:hover:not(:disabled) {
+  opacity: 0.9;
+}
+

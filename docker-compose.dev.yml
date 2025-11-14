@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./tech-int3-server
+      dockerfile: Dockerfile.dev
+    container_name: moderation-api-dev
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./tech-int3-server:/app
+      - /app/node_modules
+    environment:
+      - PORT=3001
+      - NODE_ENV=development
+    networks:
+      - moderation-network
+    command: npm run dev
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: moderation-frontend-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    networks:
+      - moderation-network
+    environment:
+      - VITE_API_URL=http://localhost:3001
+    command: npm run dev
+
+networks:
+  moderation-network:
+    driver: bridge
