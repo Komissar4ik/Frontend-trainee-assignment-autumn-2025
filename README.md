@@ -5,7 +5,7 @@
 ## Быстрый старт
 
 # Сначала требуется скачать репозиторий
-git clone [ссылка на репозиторий из GitHub]
+git clone [[ссылка на репозиторий из GitHub]](https://github.com/Komissar4ik/Frontend-trainee-assignment-autumn-2025.git)
 
 # Перейти в папку
 cd [путь до папки]
