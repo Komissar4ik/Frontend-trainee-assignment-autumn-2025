@@ -6,26 +6,40 @@
 Откройте терминал(cmd)
 
 # Сначала требуется скачать репозиторий
+
+```bash
 git clone https://github.com/Komissar4ik/Frontend-trainee-assignment-autumn-2025.git
+```
 
 # Перейти в папку
+
+```bash
 cd Frontend-trainee-assignment-autumn-2025
+```
 
 ### С Docker (рекомендуется)
 > **Требуется:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
 # Для новых версий Docker
+```bash
 docker compose up --build
+```
 
 # Для старых версий
+```bash
 docker-compose up --build
+```
 
 ### Без Docker
 # Backend
+```bash
 cd tech-int3-server && npm install && npm start
+```
 
 # Frontend (в новом терминале)
+```bash
 npm install && npm run dev
+```
 
 **После запуска:**
 - **Frontend**: http://localhost:3000

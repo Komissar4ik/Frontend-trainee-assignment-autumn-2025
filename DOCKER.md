@@ -10,10 +10,16 @@
 
 ### Production режим
 # Для новых версий Docker (Docker Desktop 4.0+)
+
+```bash
 docker compose up --build
+```
 
 # Для старых версий
+
+```bash
 docker-compose up --build
+```
 
 Запускает оба сервиса (frontend и backend) в production режиме:
 - Frontend: http://localhost:3000 (nginx)
@@ -22,11 +28,16 @@ docker-compose up --build
 ### Development режим (с hot reload)
 
 # Для новых версий Docker
+
+```bash
 docker compose -f docker-compose.dev.yml up --build
+```
 
 # Для старых версий
-docker-compose -f docker-compose.dev.yml up --build
 
+```bash
+docker-compose -f docker-compose.dev.yml up --build
+```
 
 Запускает сервисы в режиме разработки с автоматической перезагрузкой:
 - Изменения в коде применяются автоматически
@@ -37,32 +48,55 @@ docker-compose -f docker-compose.dev.yml up --build
 
 ### Остановка
 
+```bash
 docker compose down
+```
 
 ### Просмотр логов
 
 # Все сервисы
+
+```bash
 docker compose logs -f
+```
 
 # Только frontend
+
+```bash
 docker compose logs -f frontend
+```
 
 # Только backend
+
+```bash
 docker compose logs -f api
+```
+
 ### Пересборка образов
 
+```bash
 docker compose build --no-cache
+```
 
 ### Очистка
 
 # Остановить и удалить контейнеры
+
+```bash
 docker compose down
+```
 
 # Удалить также volumes
+
+```bash
 docker compose down -v
+```
 
 # Удалить образы
+
+```bash
 docker compose down --rmi all
+```
 
 ## Архитектура
 
