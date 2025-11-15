@@ -1,7 +1,7 @@
-import type { AdStatus, AdPriority, ModerationAction } from '@/types';
+import type { AddStatus, AddPriority, ModerationAction } from '@/types';
 
-export function getStatusLabel(status: AdStatus): string {
-  const statusMap: Record<AdStatus, string> = {
+export function getStatusLabel(status: AddStatus): string {
+  const statusMap: Record<AddStatus, string> = {
     pending: 'На модерации',
     approved: 'Одобрено',
     rejected: 'Отклонено',
@@ -10,8 +10,8 @@ export function getStatusLabel(status: AdStatus): string {
   return statusMap[status] || status;
 }
 
-export function getPriorityLabel(priority: AdPriority): string {
-  const priorityMap: Record<AdPriority, string> = {
+export function getPriorityLabel(priority: AddPriority): string {
+  const priorityMap: Record<AddPriority, string> = {
     normal: 'Обычный',
     urgent: 'Срочный',
   };
@@ -26,4 +26,3 @@ export function getActionLabel(action: ModerationAction): string {
   };
   return actionMap[action] || action;
 }
-

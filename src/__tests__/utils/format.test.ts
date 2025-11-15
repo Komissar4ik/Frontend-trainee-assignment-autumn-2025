@@ -1,4 +1,10 @@
-import { formatPrice, formatDateString, formatDateOnly, formatPercentage, formatTime } from '@/utils/format';
+import {
+  formatPrice,
+  formatDateString,
+  formatDateOnly,
+  formatPercentage,
+  formatTime,
+} from '@/utils/format';
 
 describe('formatPrice', () => {
   it('should format price correctly', () => {
@@ -54,4 +60,3 @@ describe('formatTime', () => {
     expect(formatTime(30)).toBe('0м 30с');
   });
 });
-

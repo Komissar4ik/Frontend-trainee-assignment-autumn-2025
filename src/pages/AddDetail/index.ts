@@ -1,0 +1,1 @@
+export { AddDetail } from './AddDetail';

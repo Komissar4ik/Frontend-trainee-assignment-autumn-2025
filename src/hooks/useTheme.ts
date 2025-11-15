@@ -5,9 +5,13 @@ type Theme = 'light' | 'dark';
 const THEME_STORAGE_KEY = 'app-theme';
 
 export function useTheme(): { theme: Theme; toggleTheme: () => void } {
+  const parseTheme = (value: string | null): Theme => {
+    return value === 'dark' ? 'dark' : 'light';
+  };
+
   const [theme, setTheme] = useState<Theme>(() => {
-    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme;
-    return savedTheme || 'light';
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    return parseTheme(savedTheme);
   });
 
   useEffect(() => {
@@ -21,4 +25,3 @@ export function useTheme(): { theme: Theme; toggleTheme: () => void } {
 
   return { theme, toggleTheme };
 }
-

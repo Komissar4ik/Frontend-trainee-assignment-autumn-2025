@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, CancelTokenSource, AxiosRequestConfig } from 'axios';
 import type {
-  AdsResponse,
-  AdsFilters,
+  AddsResponse,
+  AddsFilters,
   Advertisement,
   RejectRequest,
   RequestChangesRequest,
@@ -10,6 +10,7 @@ import type {
   DecisionsData,
   StatsFilters,
   Moderator,
+  Pagination,
 } from '@/types';
 
 const API_BASE_URL = '/api/v1';
@@ -70,10 +71,10 @@ class ApiClient {
     this.cancelTokens.clear();
   }
 
-  private buildQueryString(filters: AdsFilters | StatsFilters | Record<string, unknown>): string {
+  private buildQueryString(filters: AddsFilters | StatsFilters | Record<string, unknown>): string {
     const params = new URLSearchParams();
 
-    Object.entries(filters as Record<string, unknown>).forEach(([key, value]) => {
+    Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         if (Array.isArray(value)) {
           value.forEach((item) => params.append(key, String(item)));
@@ -86,43 +87,87 @@ class ApiClient {
     return params.toString();
   }
 
-  async getAds(filters: AdsFilters = {}): Promise<AdsResponse> {
+  async getAds(filters: AddsFilters = {}): Promise<AddsResponse> {
     const config = this.createCancelToken('getAds');
     const queryString = this.buildQueryString(filters);
-    const response = await this.client.get<AdsResponse>(
-      `/ads${queryString ? `?${queryString}` : ''}`,
-      config
-    );
-    return response.data;
+    const response = await this.client.get<{
+      ads: Array<
+        Omit<Advertisement, 'seller'> & {
+          seller: Omit<Advertisement['seller'], 'totalAdds'> & { totalAds: number };
+        }
+      >;
+      pagination: Pagination;
+    }>(`/ads${queryString ? `?${queryString}` : ''}`, config);
+    return {
+      adds: response.data.ads.map((ad) => ({
+        ...ad,
+        seller: {
+          ...ad.seller,
+          totalAdds: ad.seller.totalAds,
+        },
+      })),
+      pagination: response.data.pagination,
+    };
   }
 
   async getAdById(id: number): Promise<Advertisement> {
     const config = this.createCancelToken(`getAd-${id}`);
-    const response = await this.client.get<Advertisement>(`/ads/${id}`, config);
-    return response.data;
+    const response = await this.client.get<
+      Omit<Advertisement, 'seller'> & {
+        seller: Omit<Advertisement['seller'], 'totalAdds'> & { totalAds: number };
+      }
+    >(`/ads/${id}`, config);
+    return {
+      ...response.data,
+      seller: {
+        ...response.data.seller,
+        totalAdds: response.data.seller.totalAds,
+      },
+    };
+  }
+
+  private mapAdResponse(
+    ad: Omit<Advertisement, 'seller'> & {
+      seller: Omit<Advertisement['seller'], 'totalAdds'> & { totalAds: number };
+    }
+  ): Advertisement {
+    return {
+      ...ad,
+      seller: {
+        ...ad.seller,
+        totalAdds: ad.seller.totalAds,
+      },
+    };
   }
 
   async approveAd(id: number): Promise<Advertisement> {
-    const response = await this.client.post<{ message: string; ad: Advertisement }>(
-      `/ads/${id}/approve`
-    );
-    return response.data.ad;
+    const response = await this.client.post<{
+      message: string;
+      ad: Omit<Advertisement, 'seller'> & {
+        seller: Omit<Advertisement['seller'], 'totalAdds'> & { totalAds: number };
+      };
+    }>(`/ads/${id}/approve`);
+    return this.mapAdResponse(response.data.ad);
   }
 
   async rejectAd(id: number, data: RejectRequest): Promise<Advertisement> {
-    const response = await this.client.post<{ message: string; ad: Advertisement }>(
-      `/ads/${id}/reject`,
-      data
-    );
-    return response.data.ad;
+    const response = await this.client.post<{
+      message: string;
+      ad: Omit<Advertisement, 'seller'> & {
+        seller: Omit<Advertisement['seller'], 'totalAdds'> & { totalAds: number };
+      };
+    }>(`/ads/${id}/reject`, data);
+    return this.mapAdResponse(response.data.ad);
   }
 
   async requestChanges(id: number, data: RequestChangesRequest): Promise<Advertisement> {
-    const response = await this.client.post<{ message: string; ad: Advertisement }>(
-      `/ads/${id}/request-changes`,
-      data
-    );
-    return response.data.ad;
+    const response = await this.client.post<{
+      message: string;
+      ad: Omit<Advertisement, 'seller'> & {
+        seller: Omit<Advertisement['seller'], 'totalAdds'> & { totalAds: number };
+      };
+    }>(`/ads/${id}/request-changes`, data);
+    return this.mapAdResponse(response.data.ad);
   }
 
   async getStatsSummary(filters: StatsFilters = {}): Promise<StatsSummary> {
@@ -173,4 +218,3 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient();
-

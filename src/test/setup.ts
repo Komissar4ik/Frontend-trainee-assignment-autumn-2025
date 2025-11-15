@@ -8,7 +8,7 @@ configure({
 });
 
 if (typeof global.queueMicrotask === 'undefined') {
-  global.queueMicrotask = (callback: () => void) => {
+  global.queueMicrotask = (callback: () => void): void => {
     Promise.resolve().then(callback);
   };
 }
@@ -17,10 +17,10 @@ const originalError = console.error;
 const originalWarn = console.warn;
 
 beforeAll(() => {
-  console.error = (...args: unknown[]) => {
+  console.error = (...args: unknown[]): void => {
     const message = typeof args[0] === 'string' ? args[0] : '';
     const allArgs = args.join(' ');
-    
+
     if (
       message.includes('Failed to load') ||
       message.includes('Failed to approve') ||
@@ -38,7 +38,7 @@ beforeAll(() => {
     originalError.call(console, ...args);
   };
 
-  console.warn = (...args: unknown[]) => {
+  console.warn = (...args: unknown[]): void => {
     if (
       typeof args[0] === 'string' &&
       (args[0].includes('React Router Future Flag Warning') ||
@@ -83,4 +83,3 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
   unobserve: jest.fn(),
   disconnect: jest.fn(),
 }));
-

@@ -1,7 +1,7 @@
 import { Skeleton } from '../Skeleton';
-import styles from './AdCardSkeleton.module.css';
+import styles from './AddCardSkeleton.module.css';
 
-export function AdCardSkeleton(): JSX.Element {
+export function AddCardSkeleton(): JSX.Element {
   return (
     <div className={styles.card}>
       <Skeleton height={200} className={styles.image} />
@@ -20,4 +20,3 @@ export function AdCardSkeleton(): JSX.Element {
     </div>
   );
 }
-

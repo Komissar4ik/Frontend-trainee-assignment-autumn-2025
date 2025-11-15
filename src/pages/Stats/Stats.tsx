@@ -44,9 +44,7 @@ export function Stats(): JSX.Element {
     rejected: 0,
     requestChanges: 0,
   });
-  const [categoriesData, setCategoriesData] = useState<Array<{ name: string; value: number }>>(
-    []
-  );
+  const [categoriesData, setCategoriesData] = useState<Array<{ name: string; value: number }>>([]);
   const [categoriesMap, setCategoriesMap] = useState<Record<string, number>>({});
 
   const loadStats = useCallback(async () => {
@@ -64,9 +62,7 @@ export function Stats(): JSX.Element {
       setActivityData(activityChart);
       setDecisionsData(decisionsChart);
       setCategoriesMap(categoriesChart);
-      setCategoriesData(
-        Object.entries(categoriesChart).map(([name, value]) => ({ name, value }))
-      );
+      setCategoriesData(Object.entries(categoriesChart).map(([name, value]) => ({ name, value })));
     } catch (error) {
       console.error('Failed to load stats:', error);
     } finally {
@@ -232,4 +228,3 @@ export function Stats(): JSX.Element {
     </div>
   );
 }
-

@@ -97,13 +97,13 @@ describe('useKeyboardShortcuts', () => {
     );
 
     input.focus();
-    
-    const event = new KeyboardEvent('keydown', { 
+
+    const event = new KeyboardEvent('keydown', {
       key: 'a',
       bubbles: true,
-      cancelable: true
+      cancelable: true,
     });
-    
+
     Object.defineProperty(event, 'target', {
       get: () => input,
       configurable: true,
@@ -181,4 +181,3 @@ describe('useKeyboardShortcuts', () => {
     document.body.removeChild(textarea);
   });
 });
-

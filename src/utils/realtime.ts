@@ -1,5 +1,5 @@
 let updateInterval: NodeJS.Timeout | null = null;
-let subscribers: Set<() => void> = new Set();
+const subscribers: Set<() => void> = new Set();
 
 export function startRealtimeUpdates(callback: () => void, intervalMs: number = 30000): void {
   subscribers.add(callback);
@@ -17,4 +17,3 @@ export function stopRealtimeUpdates(callback: () => void): void {
     updateInterval = null;
   }
 }
-

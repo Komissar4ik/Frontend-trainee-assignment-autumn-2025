@@ -10,7 +10,7 @@ interface KeyboardShortcuts {
 
 export function useKeyboardShortcuts(shortcuts: KeyboardShortcuts): void {
   const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
+    (event: KeyboardEvent): void => {
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
         if (event.key === '/') {
           event.preventDefault();
@@ -45,11 +45,10 @@ export function useKeyboardShortcuts(shortcuts: KeyboardShortcuts): void {
     [shortcuts]
   );
 
-  useEffect(() => {
+  useEffect((): (() => void) => {
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [handleKeyDown]);
 }
-

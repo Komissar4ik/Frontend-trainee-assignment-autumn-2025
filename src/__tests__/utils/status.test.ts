@@ -1,5 +1,5 @@
 import { getStatusLabel, getPriorityLabel, getActionLabel } from '@/utils/status';
-import type { AdStatus, AdPriority, ModerationAction } from '@/types';
+import type { AddStatus, AddPriority, ModerationAction } from '@/types';
 
 describe('getStatusLabel', () => {
   it('should return correct label for pending status', () => {
@@ -19,7 +19,7 @@ describe('getStatusLabel', () => {
   });
 
   it('should return status itself for unknown status', () => {
-    const unknownStatus = 'unknown' as AdStatus;
+    const unknownStatus = 'unknown' as AddStatus;
     expect(getStatusLabel(unknownStatus)).toBe(unknownStatus);
   });
 });
@@ -34,7 +34,7 @@ describe('getPriorityLabel', () => {
   });
 
   it('should return priority itself for unknown priority', () => {
-    const unknownPriority = 'unknown' as AdPriority;
+    const unknownPriority = 'unknown' as AddPriority;
     expect(getPriorityLabel(unknownPriority)).toBe(unknownPriority);
   });
 });
@@ -57,4 +57,3 @@ describe('getActionLabel', () => {
     expect(getActionLabel(unknownAction)).toBe(unknownAction);
   });
 });
-

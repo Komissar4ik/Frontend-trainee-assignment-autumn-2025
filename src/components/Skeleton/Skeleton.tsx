@@ -17,4 +17,3 @@ export function Skeleton({ width, height, className = '', style }: SkeletonProps
 
   return <div className={`${styles.skeleton} ${className}`} style={customStyle} />;
 }
-

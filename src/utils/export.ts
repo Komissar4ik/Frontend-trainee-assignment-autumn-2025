@@ -126,4 +126,3 @@ export function exportStatsToPDF(
     printWindow.print();
   }, 250);
 }
-

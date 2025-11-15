@@ -245,7 +245,9 @@
 }
 
 .adCardWrapper {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   animation: cardAppear 0.3s ease-out;
   animation-fill-mode: both;
 }

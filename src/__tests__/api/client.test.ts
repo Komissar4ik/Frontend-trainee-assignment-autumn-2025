@@ -1,27 +1,36 @@
 import { apiClient } from '@/api/client';
-import type { AdsFilters, StatsFilters } from '@/types';
+import type { AddsFilters, StatsFilters } from '@/types';
+import type { AxiosInstance } from 'axios';
+import { CancelTokenSource } from 'axios';
+
+interface ApiClientForTesting {
+  cancelTokens: Map<string, CancelTokenSource>;
+  client: AxiosInstance;
+}
+
+const apiClientForTesting = apiClient as unknown as ApiClientForTesting;
 
 describe('ApiClient', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (apiClient as any).cancelTokens.clear();
-    
+    apiClientForTesting.cancelTokens.clear();
+
     const mockGet = jest.fn().mockResolvedValue({ data: { ads: [], pagination: {} } });
     const mockPost = jest.fn().mockResolvedValue({ data: { ad: {}, message: '' } });
-    (apiClient as any).client.get = mockGet;
-    (apiClient as any).client.post = mockPost;
+    apiClientForTesting.client.get = mockGet;
+    apiClientForTesting.client.post = mockPost;
   });
 
   describe('cancelRequest', () => {
     it('should cancel request with given key', () => {
       const cancelMock = jest.fn();
       const source = { cancel: cancelMock, token: {} };
-      (apiClient as any).cancelTokens.set('test-key', source);
+      apiClientForTesting.cancelTokens.set('test-key', source);
 
       apiClient.cancelRequest('test-key');
 
       expect(cancelMock).toHaveBeenCalled();
-      expect((apiClient as any).cancelTokens.has('test-key')).toBe(false);
+      expect(apiClientForTesting.cancelTokens.has('test-key')).toBe(false);
     });
 
     it('should handle non-existent key gracefully', () => {
@@ -37,18 +46,18 @@ describe('ApiClient', () => {
       const cancelMock2 = jest.fn();
       const source1 = { cancel: cancelMock1, token: {} };
       const source2 = { cancel: cancelMock2, token: {} };
-      (apiClient as any).cancelTokens.set('key1', source1);
-      (apiClient as any).cancelTokens.set('key2', source2);
+      apiClientForTesting.cancelTokens.set('key1', source1);
+      apiClientForTesting.cancelTokens.set('key2', source2);
 
       apiClient.cancelAllRequests();
 
       expect(cancelMock1).toHaveBeenCalled();
       expect(cancelMock2).toHaveBeenCalled();
-      expect((apiClient as any).cancelTokens.size).toBe(0);
+      expect(apiClientForTesting.cancelTokens.size).toBe(0);
     });
 
     it('should handle empty tokens map', () => {
-      (apiClient as any).cancelTokens.clear();
+      apiClientForTesting.cancelTokens.clear();
       expect(() => {
         apiClient.cancelAllRequests();
       }).not.toThrow();
@@ -58,9 +67,9 @@ describe('ApiClient', () => {
   describe('buildQueryString', () => {
     it('should build query string from filters with arrays', async () => {
       const mockGet = jest.fn().mockResolvedValue({ data: { ads: [], pagination: {} } });
-      (apiClient as any).client.get = mockGet;
-      
-      const filters: AdsFilters = {
+      apiClientForTesting.client.get = mockGet;
+
+      const filters: AddsFilters = {
         status: ['pending', 'approved'],
         page: 1,
         limit: 10,
@@ -78,13 +87,13 @@ describe('ApiClient', () => {
 
     it('should exclude undefined, null and empty values', async () => {
       const mockGet = jest.fn().mockResolvedValue({ data: { ads: [], pagination: {} } });
-      (apiClient as any).client.get = mockGet;
-      
-      const filters: AdsFilters = {
+      apiClientForTesting.client.get = mockGet;
+
+      const filters: AddsFilters = {
         page: 1,
         search: '',
         categoryId: undefined,
-        minPrice: null as any,
+        minPrice: null as unknown as number,
       };
 
       await apiClient.getAds(filters);
@@ -98,8 +107,8 @@ describe('ApiClient', () => {
 
     it('should handle StatsFilters', async () => {
       const mockGet = jest.fn().mockResolvedValue({ data: [] });
-      (apiClient as any).client.get = mockGet;
-      
+      apiClientForTesting.client.get = mockGet;
+
       const filters: StatsFilters = {
         period: 'week',
         startDate: '2024-01-01',
@@ -119,10 +128,10 @@ describe('ApiClient', () => {
     it('should cancel existing token when creating new one with same key', async () => {
       const cancelMock = jest.fn();
       const existingSource = { cancel: cancelMock, token: {} };
-      (apiClient as any).cancelTokens.set('getAds', existingSource);
-      
+      apiClientForTesting.cancelTokens.set('getAds', existingSource);
+
       const mockGet = jest.fn().mockResolvedValue({ data: { ads: [], pagination: {} } });
-      (apiClient as any).client.get = mockGet;
+      apiClientForTesting.client.get = mockGet;
 
       await apiClient.getAds();
 
@@ -133,7 +142,7 @@ describe('ApiClient', () => {
   describe('API methods', () => {
     it('should call getAdById with correct id', async () => {
       const mockGet = jest.fn().mockResolvedValue({ data: { id: 1 } });
-      (apiClient as any).client.get = mockGet;
+      apiClientForTesting.client.get = mockGet;
 
       await apiClient.getAdById(1);
 
@@ -142,7 +151,7 @@ describe('ApiClient', () => {
 
     it('should call approveAd with correct id', async () => {
       const mockPost = jest.fn().mockResolvedValue({ data: { ad: { id: 1 }, message: '' } });
-      (apiClient as any).client.post = mockPost;
+      apiClientForTesting.client.post = mockPost;
 
       await apiClient.approveAd(1);
 
@@ -151,7 +160,7 @@ describe('ApiClient', () => {
 
     it('should call rejectAd with correct data', async () => {
       const mockPost = jest.fn().mockResolvedValue({ data: { ad: { id: 1 }, message: '' } });
-      (apiClient as any).client.post = mockPost;
+      apiClientForTesting.client.post = mockPost;
       const data = { reason: 'Другое' as const, comment: 'Test' };
 
       await apiClient.rejectAd(1, data);
@@ -161,7 +170,7 @@ describe('ApiClient', () => {
 
     it('should call requestChanges with correct data', async () => {
       const mockPost = jest.fn().mockResolvedValue({ data: { ad: { id: 1 }, message: '' } });
-      (apiClient as any).client.post = mockPost;
+      apiClientForTesting.client.post = mockPost;
       const data = { reason: 'Другое' as const, comment: 'Test' };
 
       await apiClient.requestChanges(1, data);
@@ -171,7 +180,7 @@ describe('ApiClient', () => {
 
     it('should call getActivityChart with filters', async () => {
       const mockGet = jest.fn().mockResolvedValue({ data: [] });
-      (apiClient as any).client.get = mockGet;
+      apiClientForTesting.client.get = mockGet;
       const filters: StatsFilters = { period: 'week' };
 
       await apiClient.getActivityChart(filters);
@@ -182,8 +191,10 @@ describe('ApiClient', () => {
     });
 
     it('should call getDecisionsChart with filters', async () => {
-      const mockGet = jest.fn().mockResolvedValue({ data: { approved: 0, rejected: 0, requestChanges: 0 } });
-      (apiClient as any).client.get = mockGet;
+      const mockGet = jest
+        .fn()
+        .mockResolvedValue({ data: { approved: 0, rejected: 0, requestChanges: 0 } });
+      apiClientForTesting.client.get = mockGet;
       const filters: StatsFilters = { period: 'month' };
 
       await apiClient.getDecisionsChart(filters);
@@ -195,7 +206,7 @@ describe('ApiClient', () => {
 
     it('should call getCategoriesChart with filters', async () => {
       const mockGet = jest.fn().mockResolvedValue({ data: {} });
-      (apiClient as any).client.get = mockGet;
+      apiClientForTesting.client.get = mockGet;
       const filters: StatsFilters = { startDate: '2024-01-01' };
 
       await apiClient.getCategoriesChart(filters);
@@ -207,7 +218,7 @@ describe('ApiClient', () => {
 
     it('should call getCurrentModerator', async () => {
       const mockGet = jest.fn().mockResolvedValue({ data: { id: 1 } });
-      (apiClient as any).client.get = mockGet;
+      apiClientForTesting.client.get = mockGet;
 
       await apiClient.getCurrentModerator();
 
@@ -216,7 +227,7 @@ describe('ApiClient', () => {
 
     it('should handle empty filters in getAds', async () => {
       const mockGet = jest.fn().mockResolvedValue({ data: { ads: [], pagination: {} } });
-      (apiClient as any).client.get = mockGet;
+      apiClientForTesting.client.get = mockGet;
 
       await apiClient.getAds({});
 
@@ -227,7 +238,7 @@ describe('ApiClient', () => {
 
     it('should handle error in API call', async () => {
       const mockGet = jest.fn().mockRejectedValue(new Error('Network error'));
-      (apiClient as any).client.get = mockGet;
+      apiClientForTesting.client.get = mockGet;
 
       await expect(apiClient.getAds()).rejects.toThrow('Network error');
     });
@@ -235,18 +246,17 @@ describe('ApiClient', () => {
 
   describe('interceptors', () => {
     it('should handle cancel error in interceptor', async () => {
-      const axios = require('axios');
-      const CancelToken = axios.CancelToken;
+      const axios = await import('axios');
+      const CancelToken = axios.default.CancelToken;
       const source = CancelToken.source();
-      
+
       const mockGet = jest.fn().mockImplementation(() => {
         source.cancel('Request cancelled');
-        return Promise.reject(axios.Cancel('Request cancelled'));
+        return Promise.reject(axios.default.Cancel('Request cancelled'));
       });
-      (apiClient as any).client.get = mockGet;
+      apiClientForTesting.client.get = mockGet;
 
       await expect(apiClient.getAds()).rejects.toBeDefined();
     });
   });
 });
-

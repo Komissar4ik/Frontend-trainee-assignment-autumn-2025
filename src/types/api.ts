@@ -1,6 +1,6 @@
-export type AdStatus = 'pending' | 'approved' | 'rejected' | 'draft';
+export type AddStatus = 'pending' | 'approved' | 'rejected' | 'draft';
 
-export type AdPriority = 'normal' | 'urgent';
+export type AddPriority = 'normal' | 'urgent';
 
 export type ModerationAction = 'approved' | 'rejected' | 'requestChanges';
 
@@ -22,7 +22,7 @@ export interface Seller {
   id: number;
   name: string;
   rating: string;
-  totalAds: number;
+  totalAdds: number;
   registeredAt: string;
 }
 
@@ -43,8 +43,8 @@ export interface Advertisement {
   price: number;
   category: string;
   categoryId: number;
-  status: AdStatus;
-  priority: AdPriority;
+  status: AddStatus;
+  priority: AddPriority;
   createdAt: string;
   updatedAt: string;
   images: string[];
@@ -60,15 +60,15 @@ export interface Pagination {
   itemsPerPage: number;
 }
 
-export interface AdsResponse {
-  ads: Advertisement[];
+export interface AddsResponse {
+  adds: Advertisement[];
   pagination: Pagination;
 }
 
-export interface AdsFilters {
+export interface AddsFilters {
   page?: number;
   limit?: number;
-  status?: AdStatus[];
+  status?: AddStatus[];
   categoryId?: number;
   minPrice?: number;
   maxPrice?: number;
@@ -134,4 +134,3 @@ export interface StatsFilters {
   startDate?: string;
   endDate?: string;
 }
-

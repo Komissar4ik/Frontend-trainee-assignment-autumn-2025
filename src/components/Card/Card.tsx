@@ -16,4 +16,3 @@ export function Card({ children, className = '', onClick }: CardProps): JSX.Elem
     </div>
   );
 }
-

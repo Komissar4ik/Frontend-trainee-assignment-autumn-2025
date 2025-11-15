@@ -3,11 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiClient } from '@/api';
 import { useCancelOnUnmount } from '@/hooks/useApi';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { Card, Button, Input } from '@/components';
-import type { Advertisement, RejectionReason, AdsFilters, SortBy, SortOrder } from '@/types';
+import { Card, Button, RejectionModal } from '@/components';
+import type { Advertisement, RejectionReason, AddsFilters } from '@/types';
 import { formatPrice, formatDateString } from '@/utils';
 import { getStatusLabel, getPriorityLabel, getActionLabel } from '@/utils/status';
-import styles from './AdDetail.module.css';
+import styles from './AddDetail.module.css';
 
 const REJECTION_REASONS: RejectionReason[] = [
   'Запрещенный товар',
@@ -18,7 +18,7 @@ const REJECTION_REASONS: RejectionReason[] = [
   'Другое',
 ];
 
-export function AdDetail(): JSX.Element {
+export function AddDetail(): JSX.Element {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const adId = Number(id);
@@ -68,96 +68,90 @@ export function AdDetail(): JSX.Element {
     }
   };
 
-  const handleReject = async (): Promise<void> => {
+  const getReasonValue = (): string => {
+    return selectedReason === 'Другое' ? customReason : selectedReason;
+  };
+
+  const resetModalState = (): void => {
+    setComment('');
+    setCustomReason('');
+  };
+
+  const handleAction = async (
+    action: (
+      id: number,
+      data: { reason: RejectionReason; comment: string }
+    ) => Promise<Advertisement>,
+    onSuccess: () => void
+  ): Promise<void> => {
     if (!ad) {
       return;
     }
-    const reason = selectedReason === 'Другое' ? customReason : selectedReason;
+    const reason = getReasonValue();
     if (!reason.trim()) {
       return;
     }
     setActionLoading(true);
     try {
-      const updatedAd = await apiClient.rejectAd(ad.id, {
+      const updatedAd = await action(ad.id, {
         reason: selectedReason,
         comment: comment || reason,
       });
       setAd(updatedAd);
-      setShowRejectModal(false);
-      setComment('');
-      setCustomReason('');
+      onSuccess();
+      resetModalState();
     } catch (error) {
-      console.error('Failed to reject ad:', error);
+      console.error('Failed to perform action:', error);
     } finally {
       setActionLoading(false);
     }
   };
 
+  const handleReject = async (): Promise<void> => {
+    await handleAction(apiClient.rejectAd.bind(apiClient), () => {
+      setShowRejectModal(false);
+    });
+  };
+
   const handleRequestChanges = async (): Promise<void> => {
+    await handleAction(apiClient.requestChanges.bind(apiClient), () => {
+      setShowRequestChangesModal(false);
+    });
+  };
+
+  const loadAdjacentAd = async (direction: 'next' | 'prev'): Promise<void> => {
     if (!ad) {
       return;
     }
-    const reason = selectedReason === 'Другое' ? customReason : selectedReason;
-    if (!reason.trim()) {
-      return;
-    }
-    setActionLoading(true);
     try {
-      const updatedAd = await apiClient.requestChanges(ad.id, {
-        reason: selectedReason,
-        comment: comment || reason,
-      });
-      setAd(updatedAd);
-      setShowRequestChangesModal(false);
-      setComment('');
-      setCustomReason('');
+      const filters: AddsFilters = {
+        limit: 100,
+        page: 1,
+        sortBy: 'createdAt' as const,
+        sortOrder: 'desc' as const,
+      };
+      const response = await apiClient.getAds(filters);
+      const currentIndex = response.adds.findIndex((a: Advertisement) => a.id === ad.id);
+      const targetIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
+      const isValidIndex =
+        direction === 'next'
+          ? currentIndex >= 0 && currentIndex < response.adds.length - 1
+          : currentIndex > 0;
+
+      if (isValidIndex && targetIndex >= 0 && targetIndex < response.adds.length) {
+        navigate(`/item/${response.adds[targetIndex].id}`);
+      }
     } catch (error) {
-      console.error('Failed to request changes:', error);
-    } finally {
-      setActionLoading(false);
+      console.error(`Failed to load ${direction === 'next' ? 'next' : 'previous'} ad:`, error);
     }
   };
 
   const loadNextAd = async (): Promise<void> => {
-    if (!ad) {
-      return;
-    }
-    try {
-      const filters: AdsFilters = { 
-        limit: 100, 
-        page: 1, 
-        sortBy: 'createdAt' as SortBy, 
-        sortOrder: 'desc' as SortOrder 
-      };
-      const response = await apiClient.getAds(filters);
-      const currentIndex = response.ads.findIndex((a) => a.id === ad.id);
-      if (currentIndex >= 0 && currentIndex < response.ads.length - 1) {
-        navigate(`/item/${response.ads[currentIndex + 1].id}`);
-      }
-    } catch (error) {
-      console.error('Failed to load next ad:', error);
-    }
+    await loadAdjacentAd('next');
   };
 
   const loadPrevAd = async (): Promise<void> => {
-    if (!ad) {
-      return;
-    }
-    try {
-      const filters: AdsFilters = { 
-        limit: 100, 
-        page: 1, 
-        sortBy: 'createdAt' as SortBy, 
-        sortOrder: 'desc' as SortOrder 
-      };
-      const response = await apiClient.getAds(filters);
-      const currentIndex = response.ads.findIndex((a) => a.id === ad.id);
-      if (currentIndex > 0) {
-        navigate(`/item/${response.ads[currentIndex - 1].id}`);
-      }
-    } catch (error) {
-      console.error('Failed to load prev ad:', error);
-    }
+    await loadAdjacentAd('prev');
   };
 
   useKeyboardShortcuts({
@@ -228,7 +222,12 @@ export function AdDetail(): JSX.Element {
             <h2 className={styles.sectionTitle}>Галерея изображений</h2>
             <div className={styles.gallery}>
               {ad.images.map((image, index) => (
-                <img key={index} src={image} alt={`${ad.title} ${index + 1}`} className={styles.galleryImage} />
+                <img
+                  key={index}
+                  src={image}
+                  alt={`${ad.title} ${index + 1}`}
+                  className={styles.galleryImage}
+                />
               ))}
             </div>
           </Card>
@@ -265,11 +264,13 @@ export function AdDetail(): JSX.Element {
               </div>
               <div className={styles.sellerField}>
                 <span className={styles.sellerLabel}>Объявлений:</span>
-                <span className={styles.sellerValue}>{ad.seller.totalAds}</span>
+                <span className={styles.sellerValue}>{ad.seller.totalAdds}</span>
               </div>
               <div className={styles.sellerField}>
                 <span className={styles.sellerLabel}>Дата регистрации:</span>
-                <span className={styles.sellerValue}>{formatDateString(ad.seller.registeredAt)}</span>
+                <span className={styles.sellerValue}>
+                  {formatDateString(ad.seller.registeredAt)}
+                </span>
               </div>
             </div>
           </Card>
@@ -284,7 +285,9 @@ export function AdDetail(): JSX.Element {
                   <div key={entry.id} className={styles.historyItem}>
                     <div className={styles.historyHeader}>
                       <span className={styles.historyModerator}>{entry.moderatorName}</span>
-                      <span className={styles.historyDate}>{formatDateString(entry.timestamp)}</span>
+                      <span className={styles.historyDate}>
+                        {formatDateString(entry.timestamp)}
+                      </span>
                     </div>
                     <div className={styles.historyAction}>{getActionLabel(entry.action)}</div>
                     {entry.reason && (
@@ -334,91 +337,40 @@ export function AdDetail(): JSX.Element {
       </div>
 
       {showRejectModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowRejectModal(false)}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <h3 className={styles.modalTitle}>Отклонить объявление</h3>
-            <div className={styles.modalContent}>
-              <label className={styles.modalLabel}>Причина отклонения:</label>
-              <select
-                className={styles.modalSelect}
-                value={selectedReason}
-                onChange={(e) => setSelectedReason(e.target.value as RejectionReason)}
-              >
-                {REJECTION_REASONS.map((reason) => (
-                  <option key={reason} value={reason}>
-                    {reason}
-                  </option>
-                ))}
-              </select>
-              {selectedReason === 'Другое' && (
-                <Input
-                  placeholder="Укажите причину"
-                  value={customReason}
-                  onChange={(e) => setCustomReason(e.target.value)}
-                />
-              )}
-              <Input
-                label="Комментарий (необязательно)"
-                placeholder="Дополнительный комментарий"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-              />
-            </div>
-            <div className={styles.modalActions}>
-              <Button onClick={() => setShowRejectModal(false)} variant="secondary">
-                Отмена
-              </Button>
-              <Button onClick={handleReject} variant="danger" disabled={actionLoading}>
-                Отклонить
-              </Button>
-            </div>
-          </div>
-        </div>
+        <RejectionModal
+          title="Отклонить объявление"
+          selectedReason={selectedReason}
+          onReasonChange={setSelectedReason}
+          customReason={customReason}
+          onCustomReasonChange={setCustomReason}
+          comment={comment}
+          onCommentChange={setComment}
+          onClose={() => setShowRejectModal(false)}
+          onConfirm={handleReject}
+          confirmLabel="Отклонить"
+          confirmVariant="danger"
+          loading={actionLoading}
+          rejectionReasons={REJECTION_REASONS}
+        />
       )}
 
       {showRequestChangesModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowRequestChangesModal(false)}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <h3 className={styles.modalTitle}>Вернуть на доработку</h3>
-            <div className={styles.modalContent}>
-              <label className={styles.modalLabel}>Причина:</label>
-              <select
-                className={styles.modalSelect}
-                value={selectedReason}
-                onChange={(e) => setSelectedReason(e.target.value as RejectionReason)}
-              >
-                {REJECTION_REASONS.map((reason) => (
-                  <option key={reason} value={reason}>
-                    {reason}
-                  </option>
-                ))}
-              </select>
-              {selectedReason === 'Другое' && (
-                <Input
-                  placeholder="Укажите причину"
-                  value={customReason}
-                  onChange={(e) => setCustomReason(e.target.value)}
-                />
-              )}
-              <Input
-                label="Комментарий (необязательно)"
-                placeholder="Дополнительный комментарий"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-              />
-            </div>
-            <div className={styles.modalActions}>
-              <Button onClick={() => setShowRequestChangesModal(false)} variant="secondary">
-                Отмена
-              </Button>
-              <Button onClick={handleRequestChanges} variant="warning" disabled={actionLoading}>
-                Вернуть на доработку
-              </Button>
-            </div>
-          </div>
-        </div>
+        <RejectionModal
+          title="Вернуть на доработку"
+          selectedReason={selectedReason}
+          onReasonChange={setSelectedReason}
+          customReason={customReason}
+          onCustomReasonChange={setCustomReason}
+          comment={comment}
+          onCommentChange={setComment}
+          onClose={() => setShowRequestChangesModal(false)}
+          onConfirm={handleRequestChanges}
+          confirmLabel="Вернуть на доработку"
+          confirmVariant="warning"
+          loading={actionLoading}
+          rejectionReasons={REJECTION_REASONS}
+        />
       )}
     </div>
   );
 }
-

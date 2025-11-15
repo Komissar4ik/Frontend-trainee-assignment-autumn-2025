@@ -60,10 +60,13 @@ describe('Button', () => {
   });
 
   it('should pass through HTML button attributes', () => {
-    render(<Button type="submit" aria-label="Submit form">Submit</Button>);
+    render(
+      <Button type="submit" aria-label="Submit form">
+        Submit
+      </Button>
+    );
     const button = screen.getByRole('button');
     expect(button).toHaveAttribute('type', 'submit');
     expect(button).toHaveAttribute('aria-label', 'Submit form');
   });
 });
-

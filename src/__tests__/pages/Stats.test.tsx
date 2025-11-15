@@ -7,17 +7,23 @@ import type { StatsSummary, ActivityData, DecisionsData } from '@/types';
 
 jest.mock('@/utils/export');
 jest.mock('recharts', () => ({
-  BarChart: ({ children }: { children: React.ReactNode }) => <div data-testid="bar-chart">{children}</div>,
-  Bar: () => null,
-  PieChart: ({ children }: { children: React.ReactNode }) => <div data-testid="pie-chart">{children}</div>,
-  Pie: () => null,
-  Cell: () => null,
-  XAxis: () => null,
-  YAxis: () => null,
-  CartesianGrid: () => null,
-  Tooltip: () => null,
-  Legend: () => null,
-  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  BarChart: ({ children }: { children: React.ReactNode }): JSX.Element => (
+    <div data-testid="bar-chart">{children}</div>
+  ),
+  Bar: (): null => null,
+  PieChart: ({ children }: { children: React.ReactNode }): JSX.Element => (
+    <div data-testid="pie-chart">{children}</div>
+  ),
+  Pie: (): null => null,
+  Cell: (): null => null,
+  XAxis: (): null => null,
+  YAxis: (): null => null,
+  CartesianGrid: (): null => null,
+  Tooltip: (): null => null,
+  Legend: (): null => null,
+  ResponsiveContainer: ({ children }: { children: React.ReactNode }): JSX.Element => (
+    <div>{children}</div>
+  ),
 }));
 
 jest.mock('@/api');
@@ -26,7 +32,7 @@ jest.mock('@/hooks/useApi', () => ({
 }));
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
-  useSearchParams: () => [new URLSearchParams(), jest.fn()],
+  useSearchParams: (): [URLSearchParams, jest.Mock] => [new URLSearchParams(), jest.fn()],
 }));
 
 const mockedApiClient = apiClient as jest.Mocked<typeof apiClient>;
@@ -79,27 +85,29 @@ describe('Stats', () => {
 
   it('should render loading state initially', () => {
     mockedApiClient.getStatsSummary.mockImplementation(() => new Promise(() => {}));
-    
+
     render(<Stats />);
-    
+
     expect(screen.getByText('Загрузка статистики...')).toBeInTheDocument();
   });
 
   it('should render stats after loading', async () => {
     render(<Stats />);
-    
-    expect(await screen.findByText('Статистика модератора', {}, { timeout: 200 })).toBeInTheDocument();
+
+    expect(
+      await screen.findByText('Статистика модератора', {}, { timeout: 200 })
+    ).toBeInTheDocument();
   });
 
   it('should display total reviewed count', async () => {
     render(<Stats />);
-    
+
     expect(await screen.findByText('100')).toBeInTheDocument();
   });
 
   it('should call all API methods on mount', async () => {
     render(<Stats />);
-    
+
     await screen.findByText('Статистика модератора', {}, { timeout: 200 });
     expect(mockedApiClient.getStatsSummary).toHaveBeenCalled();
     expect(mockedApiClient.getActivityChart).toHaveBeenCalled();
@@ -109,50 +117,50 @@ describe('Stats', () => {
 
   it('should display statistics title', async () => {
     render(<Stats />);
-    
+
     expect(await screen.findByText('Статистика модератора')).toBeInTheDocument();
   });
 
   it('should change period when period button is clicked', async () => {
     const user = userEvent.setup();
     render(<Stats />);
-    
+
     await screen.findByText('Статистика модератора', {}, { timeout: 200 });
     const todayButton = screen.getByText('Сегодня');
     await act(async () => {
       await user.click(todayButton);
     });
-    
+
     expect(mockedApiClient.getStatsSummary).toHaveBeenCalledTimes(2);
   });
 
   it('should call exportStatsToCSV when CSV export button is clicked', async () => {
     const user = userEvent.setup();
     render(<Stats />);
-    
+
     const csvButton = await screen.findByText('Экспорт CSV');
     await act(async () => {
       await user.click(csvButton);
     });
-    
+
     expect(exportStatsToCSV).toHaveBeenCalled();
   });
 
   it('should call exportStatsToPDF when PDF export button is clicked', async () => {
     const user = userEvent.setup();
     render(<Stats />);
-    
+
     const pdfButton = await screen.findByText('Экспорт PDF');
     await act(async () => {
       await user.click(pdfButton);
     });
-    
+
     expect(exportStatsToPDF).toHaveBeenCalled();
   });
 
   it('should display metrics cards', async () => {
     render(<Stats />);
-    
+
     expect(await screen.findByText('Всего проверено')).toBeInTheDocument();
     expect(screen.getByText('Процент одобренных')).toBeInTheDocument();
     expect(screen.getByText('Процент отклоненных')).toBeInTheDocument();
@@ -162,25 +170,25 @@ describe('Stats', () => {
   it('should change period to week', async () => {
     const user = userEvent.setup();
     render(<Stats />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Статистика модератора')).toBeInTheDocument();
     });
-    
+
     const todayButton = screen.getByText('Сегодня');
     await act(async () => {
       await user.click(todayButton);
     });
-    
+
     await waitFor(() => {
       expect(mockedApiClient.getStatsSummary).toHaveBeenCalledTimes(2);
     });
-    
+
     const weekButton = screen.getByText('Последние 7 дней');
     await act(async () => {
       await user.click(weekButton);
     });
-    
+
     await waitFor(() => {
       expect(mockedApiClient.getStatsSummary).toHaveBeenCalledTimes(3);
     });
@@ -189,16 +197,16 @@ describe('Stats', () => {
   it('should change period to month', async () => {
     const user = userEvent.setup();
     render(<Stats />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Статистика модератора')).toBeInTheDocument();
     });
-    
+
     const monthButton = screen.getByText('Последние 30 дней');
     await act(async () => {
       await user.click(monthButton);
     });
-    
+
     await waitFor(() => {
       expect(mockedApiClient.getStatsSummary).toHaveBeenCalledTimes(2);
     });
@@ -206,14 +214,16 @@ describe('Stats', () => {
 
   it('should handle API error gracefully', async () => {
     mockedApiClient.getStatsSummary.mockRejectedValueOnce(new Error('API Error'));
-    
+
     render(<Stats />);
-    
-    await waitFor(() => {
-      expect(screen.queryByText('Загрузка статистики...')).not.toBeInTheDocument();
-    }, { timeout: 1000 });
-    
+
+    await waitFor(
+      () => {
+        expect(screen.queryByText('Загрузка статистики...')).not.toBeInTheDocument();
+      },
+      { timeout: 1000 }
+    );
+
     expect(mockedApiClient.getStatsSummary).toHaveBeenCalled();
   });
 });
-

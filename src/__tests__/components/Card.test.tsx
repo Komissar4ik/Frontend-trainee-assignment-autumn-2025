@@ -39,4 +39,3 @@ describe('Card', () => {
     expect(card).not.toHaveAttribute('role', 'button');
   });
 });
-

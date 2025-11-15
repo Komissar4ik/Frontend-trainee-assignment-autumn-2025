@@ -37,4 +37,3 @@ export function formatTime(seconds: number): string {
   const remainingSeconds = seconds % 60;
   return `${minutes}м ${remainingSeconds}с`;
 }
-

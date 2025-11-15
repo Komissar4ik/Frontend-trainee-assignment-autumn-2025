@@ -113,7 +113,7 @@ describe('exportStatsToPDF', () => {
 
   it('should handle null window.open return', () => {
     window.open = jest.fn().mockReturnValue(null);
-    
+
     const summary: StatsSummary = {
       totalReviewed: 100,
       totalReviewedToday: 10,
@@ -145,10 +145,9 @@ describe('exportStatsToPDF', () => {
     exportStatsToPDF(summary, [], { approved: 0, rejected: 0, requestChanges: 0 }, {});
 
     expect(mockPrintWindow.print).not.toHaveBeenCalled();
-    
+
     jest.advanceTimersByTime(250);
-    
+
     expect(mockPrintWindow.print).toHaveBeenCalled();
   });
 });
-

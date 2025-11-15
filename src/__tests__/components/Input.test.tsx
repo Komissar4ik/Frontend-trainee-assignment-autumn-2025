@@ -38,14 +38,7 @@ describe('Input', () => {
   });
 
   it('should pass through HTML input attributes', () => {
-    render(
-      <Input
-        type="email"
-        placeholder="Enter email"
-        required
-        aria-label="Email input"
-      />
-    );
+    render(<Input type="email" placeholder="Enter email" required aria-label="Email input" />);
     const input = screen.getByRole('textbox');
     expect(input).toHaveAttribute('type', 'email');
     expect(input).toHaveAttribute('placeholder', 'Enter email');
@@ -59,4 +52,3 @@ describe('Input', () => {
     expect(ref.current).toBeInstanceOf(HTMLInputElement);
   });
 });
-

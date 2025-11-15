@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from '@/components';
-import { AdsList } from '@/pages/AdsList';
-import { AdDetail } from '@/pages/AdDetail';
+import { AddsList } from '@/pages/AddsList';
+import { AddDetail } from '@/pages/AddDetail';
 import { Stats } from '@/pages/Stats';
 import './styles/index.css';
 
@@ -11,8 +11,8 @@ function App(): JSX.Element {
       <Layout>
         <Routes>
           <Route path="/" element={<Navigate to="/list" replace />} />
-          <Route path="/list" element={<AdsList />} />
-          <Route path="/item/:id" element={<AdDetail />} />
+          <Route path="/list" element={<AddsList />} />
+          <Route path="/item/:id" element={<AddDetail />} />
           <Route path="/stats" element={<Stats />} />
         </Routes>
       </Layout>
@@ -21,4 +21,3 @@ function App(): JSX.Element {
 }
 
 export default App;
-

@@ -1,8 +1,13 @@
 import { renderHook, act } from '@testing-library/react';
 import { useFilterPresets } from '@/hooks/useFilterPresets';
-import type { AdsFilters } from '@/types';
+import type { AddsFilters } from '@/types';
 
-const mockLocalStorage = (() => {
+const mockLocalStorage = ((): {
+  getItem: (key: string) => string | null;
+  setItem: (key: string, value: string) => void;
+  removeItem: (key: string) => void;
+  clear: () => void;
+} => {
   let store: Record<string, string> = {};
 
   return {
@@ -34,9 +39,7 @@ describe('useFilterPresets', () => {
   });
 
   it('should load presets from localStorage', () => {
-    const savedPresets = [
-      { id: '1', name: 'Test Preset', filters: { status: ['pending'] } },
-    ];
+    const savedPresets = [{ id: '1', name: 'Test Preset', filters: { status: ['pending'] } }];
     mockLocalStorage.setItem('filter-presets', JSON.stringify(savedPresets));
 
     const { result } = renderHook(() => useFilterPresets());
@@ -45,7 +48,7 @@ describe('useFilterPresets', () => {
 
   it('should save preset correctly', () => {
     const { result } = renderHook(() => useFilterPresets());
-    const filters: AdsFilters = {
+    const filters: AddsFilters = {
       status: ['pending', 'approved'],
       categoryId: 1,
     };
@@ -61,7 +64,7 @@ describe('useFilterPresets', () => {
 
   it('should load preset correctly', () => {
     const { result } = renderHook(() => useFilterPresets());
-    const filters: AdsFilters = { status: ['pending'] };
+    const filters: AddsFilters = { status: ['pending'] };
 
     act(() => {
       result.current.savePreset('Test', filters);
@@ -85,7 +88,7 @@ describe('useFilterPresets', () => {
     act(() => {
       result.current.savePreset('Preset 1', { status: ['pending'] });
     });
-    
+
     expect(result.current.presets).toHaveLength(1);
     expect(result.current.presets[0].name).toBe('Preset 1');
 
@@ -96,7 +99,7 @@ describe('useFilterPresets', () => {
     expect(result.current.presets).toHaveLength(2);
 
     const presetId = result.current.presets[0].id;
-    
+
     act(() => {
       result.current.deletePreset(presetId);
     });
@@ -107,10 +110,9 @@ describe('useFilterPresets', () => {
 
   it('should handle invalid JSON in localStorage', () => {
     mockLocalStorage.setItem('filter-presets', 'invalid json');
-    
+
     const { result } = renderHook(() => useFilterPresets());
-    
+
     expect(result.current.presets).toEqual([]);
   });
 });
-

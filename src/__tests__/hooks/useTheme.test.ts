@@ -1,7 +1,12 @@
 import { renderHook, act } from '@testing-library/react';
 import { useTheme } from '@/hooks/useTheme';
 
-const mockLocalStorage = (() => {
+const mockLocalStorage = ((): {
+  getItem: (key: string) => string | null;
+  setItem: (key: string, value: string) => void;
+  removeItem: (key: string) => void;
+  clear: () => void;
+} => {
   let store: Record<string, string> = {};
 
   return {
@@ -72,4 +77,3 @@ describe('useTheme', () => {
     expect(mockLocalStorage.getItem('app-theme')).toBe('dark');
   });
 });
-

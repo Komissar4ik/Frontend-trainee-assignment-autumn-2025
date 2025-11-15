@@ -5,15 +5,15 @@ import { useApiRequestCancel } from '@/hooks/useApi';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useFilterPresets } from '@/hooks/useFilterPresets';
 import { startRealtimeUpdates, stopRealtimeUpdates } from '@/utils/realtime';
-import { Card, Button, Input, AdCardSkeleton } from '@/components';
-import type { Advertisement, AdsFilters, AdStatus, SortBy, SortOrder } from '@/types';
+import { Card, Button, Input, AddCardSkeleton } from '@/components';
+import type { Advertisement, AddsFilters, AddStatus, SortBy, SortOrder } from '@/types';
 import { formatPrice, formatDateString } from '@/utils';
 import { getStatusLabel, getPriorityLabel } from '@/utils/status';
-import styles from './AdsList.module.css';
+import styles from './AddsList.module.css';
 
 const ITEMS_PER_PAGE = 10;
 
-export function AdsList(): JSX.Element {
+export function AddsList(): JSX.Element {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -33,24 +33,45 @@ export function AdsList(): JSX.Element {
   const { presets, savePreset, loadPreset } = useFilterPresets();
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const [selectedStatuses, setSelectedStatuses] = useState<AdStatus[]>(() => {
-    const statusParam = searchParams.get('status');
-    if (!statusParam) return [];
-    const validStatuses: AdStatus[] = ['pending', 'approved', 'rejected', 'draft'];
-    return statusParam
-      .split(',')
-      .filter((status): status is AdStatus => validStatuses.includes(status as AdStatus));
+
+  const parseStatusesFromParams = (statusParam: string | null): AddStatus[] => {
+    if (!statusParam) {
+      return [];
+    }
+    const isValidStatus = (status: string): status is AddStatus => {
+      return (
+        status === 'pending' || status === 'approved' || status === 'rejected' || status === 'draft'
+      );
+    };
+    return statusParam.split(',').filter(isValidStatus);
+  };
+
+  const [selectedStatuses, setSelectedStatuses] = useState<AddStatus[]>(() => {
+    return parseStatusesFromParams(searchParams.get('status'));
   });
   const [categoryId, setCategoryId] = useState<number | undefined>(
     searchParams.get('categoryId') ? Number(searchParams.get('categoryId')) : undefined
   );
   const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '');
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '');
-  const [sortBy, setSortBy] = useState<SortBy>(
-    (searchParams.get('sortBy') as SortBy) || 'createdAt'
-  );
-  const [sortOrder, setSortOrder] = useState<SortOrder>(
-    (searchParams.get('sortOrder') as SortOrder) || 'desc'
+
+  const parseSortBy = (value: string | null): SortBy => {
+    const isValidSortBy = (val: string): val is SortBy => {
+      return val === 'createdAt' || val === 'price' || val === 'priority';
+    };
+    if (value && isValidSortBy(value)) {
+      return value;
+    }
+    return 'createdAt';
+  };
+
+  const parseSortOrder = (value: string | null): SortOrder => {
+    return value === 'asc' || value === 'desc' ? value : 'desc';
+  };
+
+  const [sortBy, setSortBy] = useState<SortBy>(() => parseSortBy(searchParams.get('sortBy')));
+  const [sortOrder, setSortOrder] = useState<SortOrder>(() =>
+    parseSortOrder(searchParams.get('sortOrder'))
   );
 
   const loadAds = useCallback(async () => {
@@ -59,7 +80,7 @@ export function AdsList(): JSX.Element {
       const page = Number(searchParams.get('page')) || 1;
       setCurrentPage(page);
 
-      const filters: AdsFilters = {
+      const filters: AddsFilters = {
         page,
         limit: ITEMS_PER_PAGE,
         sortBy,
@@ -83,7 +104,7 @@ export function AdsList(): JSX.Element {
       }
 
       const response = await apiClient.getAds(filters);
-      setAds(response.ads);
+      setAds(response.adds);
       setTotalPages(response.pagination.totalPages);
       setTotalItems(response.pagination.totalItems);
       setNewAdsCount(0);
@@ -107,9 +128,9 @@ export function AdsList(): JSX.Element {
     loadAds();
   }, [loadAds]);
 
-  useEffect(() => {
+  useEffect((): (() => void) => {
     const checkForNewAds = (): void => {
-      const filters: AdsFilters = {
+      const filters: AddsFilters = {
         page: 1,
         limit: ITEMS_PER_PAGE,
         sortBy: 'createdAt',
@@ -118,17 +139,16 @@ export function AdsList(): JSX.Element {
       apiClient
         .getAds(filters)
         .then((response) => {
-          if (response.ads.length > 0 && ads.length > 0) {
-            const newCount = response.ads.filter(
-              (newAd) => !ads.some((oldAd) => oldAd.id === newAd.id)
+          if (response.adds.length > 0 && ads.length > 0) {
+            const newCount = response.adds.filter(
+              (newAd: Advertisement) => !ads.some((oldAd: Advertisement) => oldAd.id === newAd.id)
             ).length;
             if (newCount > 0) {
               setNewAdsCount(newCount);
             }
           }
         })
-        .catch(() => {
-        });
+        .catch(() => {});
     };
 
     startRealtimeUpdates(checkForNewAds, 30000);
@@ -163,7 +183,7 @@ export function AdsList(): JSX.Element {
     updateSearchParams({ search: value || null, page: '1' });
   };
 
-  const handleStatusToggle = (status: AdStatus): void => {
+  const handleStatusToggle = (status: AddStatus): void => {
     const newStatuses = selectedStatuses.includes(status)
       ? selectedStatuses.filter((s) => s !== status)
       : [...selectedStatuses, status];
@@ -232,44 +252,38 @@ export function AdsList(): JSX.Element {
     setSelectedIds(newSelected);
   };
 
-  const handleBulkApprove = async (): Promise<void> => {
+  const handleBulkAction = async (
+    action: (id: number) => Promise<Advertisement>,
+    errorMessage: string
+  ): Promise<void> => {
     if (selectedIds.size === 0) {
       return;
     }
     setBulkLoading(true);
     try {
-      await Promise.all(Array.from(selectedIds).map((id) => apiClient.approveAd(id)));
+      await Promise.all(Array.from(selectedIds).map(action));
       setSelectedIds(new Set());
       await loadAds();
     } catch (error) {
-      console.error('Failed to approve ads:', error);
+      console.error(errorMessage, error);
     } finally {
       setBulkLoading(false);
     }
+  };
+
+  const handleBulkApprove = async (): Promise<void> => {
+    await handleBulkAction(apiClient.approveAd.bind(apiClient), 'Failed to approve ads:');
   };
 
   const handleBulkReject = async (): Promise<void> => {
-    if (selectedIds.size === 0) {
-      return;
-    }
-    setBulkLoading(true);
-    try {
-      await Promise.all(
-        Array.from(selectedIds).map((id) =>
-          apiClient.rejectAd(id, { reason: 'Другое', comment: 'Массовое отклонение' })
-        )
-      );
-      setSelectedIds(new Set());
-      await loadAds();
-    } catch (error) {
-      console.error('Failed to reject ads:', error);
-    } finally {
-      setBulkLoading(false);
-    }
+    await handleBulkAction(
+      (id: number) => apiClient.rejectAd(id, { reason: 'Другое', comment: 'Массовое отклонение' }),
+      'Failed to reject ads:'
+    );
   };
 
   const handleSavePreset = (): void => {
-    const filters: AdsFilters = {
+    const filters: AddsFilters = {
       status: selectedStatuses.length > 0 ? selectedStatuses : undefined,
       categoryId,
       minPrice: minPrice ? Number(minPrice) : undefined,
@@ -319,7 +333,7 @@ export function AdsList(): JSX.Element {
     }
   };
 
-  const statusOptions: AdStatus[] = ['pending', 'approved', 'rejected'];
+  const statusOptions: AddStatus[] = ['pending', 'approved', 'rejected'];
   const categories = [
     { id: 0, name: 'Электроника' },
     { id: 1, name: 'Недвижимость' },
@@ -419,11 +433,7 @@ export function AdsList(): JSX.Element {
           <Button onClick={handleResetFilters} variant="secondary" size="small">
             Сбросить фильтры
           </Button>
-          <Button
-            onClick={() => setShowPresetModal(true)}
-            variant="secondary"
-            size="small"
-          >
+          <Button onClick={() => setShowPresetModal(true)} variant="secondary" size="small">
             Сохранить фильтры
           </Button>
           {presets.length > 0 && (
@@ -483,94 +493,98 @@ export function AdsList(): JSX.Element {
       {loading ? (
         <div className={styles.adsGrid}>
           {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
-            <AdCardSkeleton key={index} />
+            <AddCardSkeleton key={index} />
           ))}
         </div>
-      ) : ads.length === 0 ? (
-        <div className={styles.empty}>Объявления не найдены</div>
       ) : (
         <>
-          <div className={styles.adsGrid}>
-            <div className={styles.selectAll}>
-              <label className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={selectedIds.size === ads.length && ads.length > 0}
-                  onChange={handleSelectAll}
-                />
-                Выбрать все
-              </label>
-            </div>
-            {ads.map((ad) => (
-              <Card key={ad.id} className={styles.adCardWrapper}>
-                <div className={styles.adCard}>
-                  <div className={styles.adCheckbox}>
+          {ads.length === 0 ? (
+            <div className={styles.empty}>Объявления не найдены</div>
+          ) : (
+            <>
+              <div className={styles.adsGrid}>
+                <div className={styles.selectAll}>
+                  <label className={styles.checkboxLabel}>
                     <input
                       type="checkbox"
-                      checked={selectedIds.has(ad.id)}
-                      onChange={() => handleSelectAd(ad.id)}
-                      onClick={(e) => e.stopPropagation()}
+                      checked={selectedIds.size === ads.length && ads.length > 0}
+                      onChange={handleSelectAll}
                     />
-                  </div>
-                  <div
-                    className={styles.adCardContent}
-                    onClick={() => navigate(`/item/${ad.id}`)}
-                  >
-                    <img
-                      src={ad.images[0] || '/placeholder.png'}
-                      alt={ad.title}
-                      className={styles.adImage}
-                    />
-                    <div className={styles.adContent}>
-                      <h3 className={styles.adTitle}>{ad.title}</h3>
-                      <div className={styles.adPrice}>{formatPrice(ad.price)}</div>
-                      <div className={styles.adMeta}>
-                        <span className={styles.adCategory}>{ad.category}</span>
-                        <span className={styles.adDate}>{formatDateString(ad.createdAt)}</span>
+                    Выбрать все
+                  </label>
+                </div>
+                {ads.map((ad) => (
+                  <Card key={ad.id} className={styles.adCardWrapper}>
+                    <div className={styles.adCard}>
+                      <div className={styles.adCheckbox}>
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(ad.id)}
+                          onChange={() => handleSelectAd(ad.id)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
                       </div>
-                      <div className={styles.adStatus}>
-                        <span
-                          className={`${styles.statusBadge} ${styles[`status-${ad.status}`]}`}
-                        >
-                          {getStatusLabel(ad.status)}
-                        </span>
-                        <span
-                          className={`${styles.priorityBadge} ${styles[`priority-${ad.priority}`]}`}
-                        >
-                          {getPriorityLabel(ad.priority)}
-                        </span>
+                      <div
+                        className={styles.adCardContent}
+                        onClick={() => navigate(`/item/${ad.id}`)}
+                      >
+                        <img
+                          src={ad.images[0] || '/placeholder.png'}
+                          alt={ad.title}
+                          className={styles.adImage}
+                        />
+                        <div className={styles.adContent}>
+                          <h3 className={styles.adTitle}>{ad.title}</h3>
+                          <div className={styles.adPrice}>{formatPrice(ad.price)}</div>
+                          <div className={styles.adMeta}>
+                            <span className={styles.adCategory}>{ad.category}</span>
+                            <span className={styles.adDate}>{formatDateString(ad.createdAt)}</span>
+                          </div>
+                          <div className={styles.adStatus}>
+                            <span
+                              className={`${styles.statusBadge} ${styles[`status-${ad.status}`]}`}
+                            >
+                              {getStatusLabel(ad.status)}
+                            </span>
+                            <span
+                              className={`${styles.priorityBadge} ${styles[`priority-${ad.priority}`]}`}
+                            >
+                              {getPriorityLabel(ad.priority)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+                  </Card>
+                ))}
+              </div>
 
-          <div className={styles.pagination}>
-            <div className={styles.paginationInfo}>
-              Показано {ads.length} из {totalItems} объявлений
-            </div>
-            <div className={styles.paginationControls}>
-              <Button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                variant="secondary"
-              >
-                Назад
-              </Button>
-              <span className={styles.pageInfo}>
-                Страница {currentPage} из {totalPages}
-              </span>
-              <Button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage >= totalPages}
-                variant="secondary"
-              >
-                Вперед
-              </Button>
-            </div>
-          </div>
+              <div className={styles.pagination}>
+                <div className={styles.paginationInfo}>
+                  Показано {ads.length} из {totalItems} объявлений
+                </div>
+                <div className={styles.paginationControls}>
+                  <Button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    variant="secondary"
+                  >
+                    Назад
+                  </Button>
+                  <span className={styles.pageInfo}>
+                    Страница {currentPage} из {totalPages}
+                  </span>
+                  <Button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    variant="secondary"
+                  >
+                    Вперед
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
 
@@ -587,11 +601,7 @@ export function AdsList(): JSX.Element {
               <Button onClick={() => setShowPresetModal(false)} variant="secondary">
                 Отмена
               </Button>
-              <Button
-                onClick={handleSavePreset}
-                variant="primary"
-                disabled={!presetName.trim()}
-              >
+              <Button onClick={handleSavePreset} variant="primary" disabled={!presetName.trim()}>
                 Сохранить
               </Button>
             </div>

@@ -1,13 +1,12 @@
 import { render } from '@/test/utils';
-import { AdCardSkeleton } from '@/components/AdCardSkeleton';
+import { AddCardSkeleton } from '@/components/AddCardSkeleton';
 
-describe('AdCardSkeleton', () => {
+describe('AddCardSkeleton', () => {
   it('should render skeleton card', () => {
-    const { container } = render(<AdCardSkeleton />);
-    
+    const { container } = render(<AddCardSkeleton />);
+
     const card = container.firstChild as HTMLElement;
     expect(card).toBeInTheDocument();
     expect(card.className).toContain('card');
   });
 });
-

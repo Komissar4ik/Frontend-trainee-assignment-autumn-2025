@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { apiClient } from '@/api';
 
 export function useApiRequestCancel(): void {
-  useEffect(() => {
+  useEffect((): (() => void) => {
     return () => {
       apiClient.cancelAllRequests();
     };
@@ -10,10 +10,9 @@ export function useApiRequestCancel(): void {
 }
 
 export function useCancelOnUnmount(key: string): void {
-  useEffect(() => {
+  useEffect((): (() => void) => {
     return () => {
       apiClient.cancelRequest(key);
     };
   }, [key]);
 }
-
