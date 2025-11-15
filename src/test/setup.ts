@@ -26,6 +26,7 @@ beforeAll(() => {
       message.includes('Failed to approve') ||
       message.includes('Failed to reject') ||
       message.includes('Failed to request changes') ||
+      message.includes('Failed to perform action') ||
       message.includes('Failed to load stats') ||
       message.includes('Failed to load ads') ||
       message.includes('Warning: An update to') ||

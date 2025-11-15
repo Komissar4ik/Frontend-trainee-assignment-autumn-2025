@@ -104,7 +104,7 @@ export function AddsList(): JSX.Element {
       }
 
       const response = await apiClient.getAds(filters);
-      setAds(response.adds);
+      setAds(response.adds || []);
       setTotalPages(response.pagination.totalPages);
       setTotalItems(response.pagination.totalItems);
       setNewAdsCount(0);
@@ -139,7 +139,7 @@ export function AddsList(): JSX.Element {
       apiClient
         .getAds(filters)
         .then((response) => {
-          if (response.adds.length > 0 && ads.length > 0) {
+          if (response.adds.length > 0 && ads && ads.length > 0) {
             const newCount = response.adds.filter(
               (newAd: Advertisement) => !ads.some((oldAd: Advertisement) => oldAd.id === newAd.id)
             ).length;
@@ -235,6 +235,9 @@ export function AddsList(): JSX.Element {
   };
 
   const handleSelectAll = (): void => {
+    if (!ads) {
+      return;
+    }
     if (selectedIds.size === ads.length) {
       setSelectedIds(new Set());
     } else {
@@ -498,7 +501,7 @@ export function AddsList(): JSX.Element {
         </div>
       ) : (
         <>
-          {ads.length === 0 ? (
+          {!ads || ads.length === 0 ? (
             <div className={styles.empty}>Объявления не найдены</div>
           ) : (
             <>
@@ -507,13 +510,13 @@ export function AddsList(): JSX.Element {
                   <label className={styles.checkboxLabel}>
                     <input
                       type="checkbox"
-                      checked={selectedIds.size === ads.length && ads.length > 0}
+                      checked={ads && selectedIds.size === ads.length && ads.length > 0}
                       onChange={handleSelectAll}
                     />
                     Выбрать все
                   </label>
                 </div>
-                {ads.map((ad) => (
+                {ads && ads.map((ad) => (
                   <Card key={ad.id} className={styles.adCardWrapper}>
                     <div className={styles.adCard}>
                       <div className={styles.adCheckbox}>
@@ -560,9 +563,9 @@ export function AddsList(): JSX.Element {
               </div>
 
               <div className={styles.pagination}>
-                <div className={styles.paginationInfo}>
-                  Показано {ads.length} из {totalItems} объявлений
-                </div>
+            <div className={styles.paginationInfo}>
+              Показано {ads ? ads.length : 0} из {totalItems} объявлений
+            </div>
                 <div className={styles.paginationControls}>
                   <Button
                     onClick={() => handlePageChange(currentPage - 1)}

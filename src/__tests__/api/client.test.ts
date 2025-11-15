@@ -15,8 +15,20 @@ describe('ApiClient', () => {
     jest.clearAllMocks();
     apiClientForTesting.cancelTokens.clear();
 
-    const mockGet = jest.fn().mockResolvedValue({ data: { ads: [], pagination: {} } });
-    const mockPost = jest.fn().mockResolvedValue({ data: { ad: {}, message: '' } });
+    const mockGet = jest.fn().mockResolvedValue({
+      data: {
+        ads: [],
+        pagination: {},
+      },
+    });
+    const mockPost = jest.fn().mockResolvedValue({
+      data: {
+        ad: {
+          seller: { totalAds: 0 },
+        },
+        message: '',
+      },
+    });
     apiClientForTesting.client.get = mockGet;
     apiClientForTesting.client.post = mockPost;
   });
@@ -141,7 +153,12 @@ describe('ApiClient', () => {
 
   describe('API methods', () => {
     it('should call getAdById with correct id', async () => {
-      const mockGet = jest.fn().mockResolvedValue({ data: { id: 1 } });
+      const mockGet = jest.fn().mockResolvedValue({
+        data: {
+          id: 1,
+          seller: { totalAds: 0 },
+        },
+      });
       apiClientForTesting.client.get = mockGet;
 
       await apiClient.getAdById(1);
@@ -150,7 +167,15 @@ describe('ApiClient', () => {
     });
 
     it('should call approveAd with correct id', async () => {
-      const mockPost = jest.fn().mockResolvedValue({ data: { ad: { id: 1 }, message: '' } });
+      const mockPost = jest.fn().mockResolvedValue({
+        data: {
+          ad: {
+            id: 1,
+            seller: { totalAds: 0 },
+          },
+          message: '',
+        },
+      });
       apiClientForTesting.client.post = mockPost;
 
       await apiClient.approveAd(1);
@@ -159,7 +184,15 @@ describe('ApiClient', () => {
     });
 
     it('should call rejectAd with correct data', async () => {
-      const mockPost = jest.fn().mockResolvedValue({ data: { ad: { id: 1 }, message: '' } });
+      const mockPost = jest.fn().mockResolvedValue({
+        data: {
+          ad: {
+            id: 1,
+            seller: { totalAds: 0 },
+          },
+          message: '',
+        },
+      });
       apiClientForTesting.client.post = mockPost;
       const data = { reason: 'Другое' as const, comment: 'Test' };
 
@@ -169,7 +202,15 @@ describe('ApiClient', () => {
     });
 
     it('should call requestChanges with correct data', async () => {
-      const mockPost = jest.fn().mockResolvedValue({ data: { ad: { id: 1 }, message: '' } });
+      const mockPost = jest.fn().mockResolvedValue({
+        data: {
+          ad: {
+            id: 1,
+            seller: { totalAds: 0 },
+          },
+          message: '',
+        },
+      });
       apiClientForTesting.client.post = mockPost;
       const data = { reason: 'Другое' as const, comment: 'Test' };
 

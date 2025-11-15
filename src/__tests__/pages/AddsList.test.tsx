@@ -65,8 +65,9 @@ describe('AddsList', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockedApiClient.getAds.mockImplementation(() => {
-      return new Promise((resolve) => {
-        queueMicrotask(() => resolve(defaultResponse));
+      return Promise.resolve({
+        adds: defaultResponse.ads,
+        pagination: defaultResponse.pagination,
       });
     });
   });
@@ -89,7 +90,7 @@ describe('AddsList', () => {
 
   it('should render empty state when no ads found', async () => {
     mockedApiClient.getAds.mockResolvedValueOnce({
-      ads: [],
+      adds: [],
       pagination: {
         currentPage: 1,
         totalPages: 1,
@@ -208,7 +209,7 @@ describe('AddsList', () => {
   it('should handle pagination', async () => {
     mockedApiClient.getAds.mockImplementation(() =>
       Promise.resolve({
-        ads: Array.from({ length: 10 }, (_, i) => ({ ...mockAd, id: i + 1 })),
+        adds: Array.from({ length: 10 }, (_, i) => ({ ...mockAd, id: i + 1 })),
         pagination: {
           currentPage: 1,
           totalPages: 2,
@@ -234,7 +235,7 @@ describe('AddsList', () => {
   it('should display pagination info', async () => {
     mockedApiClient.getAds.mockImplementation(() =>
       Promise.resolve({
-        ads: [mockAd],
+        adds: [mockAd],
         pagination: {
           currentPage: 1,
           totalPages: 5,
@@ -298,7 +299,7 @@ describe('AddsList', () => {
       return new Promise((resolve) => {
         queueMicrotask(() =>
           resolve({
-            ads: [mockAd, { ...mockAd, id: 2 }],
+            adds: [mockAd, { ...mockAd, id: 2 }],
             pagination: {
               currentPage: 1,
               totalPages: 1,
@@ -452,7 +453,7 @@ describe('AddsList', () => {
       return new Promise((resolve) => {
         queueMicrotask(() =>
           resolve({
-            ads: [mockAd],
+            adds: [mockAd],
             pagination: {
               currentPage: 1,
               totalPages: 3,
@@ -487,7 +488,7 @@ describe('AddsList', () => {
       return new Promise((resolve) => {
         queueMicrotask(() =>
           resolve({
-            ads: [mockAd],
+            adds: [mockAd],
             pagination: {
               currentPage: 2,
               totalPages: 3,
@@ -691,7 +692,7 @@ describe('AddsList', () => {
       return new Promise((resolve) => {
         queueMicrotask(() =>
           resolve({
-            ads: [],
+            adds: [],
             pagination: {
               currentPage: 1,
               totalPages: 1,

@@ -180,7 +180,7 @@ describe('AddDetail', () => {
 
     await screen.findByText('Отклонить объявление', {}, { timeout: 200 });
 
-    const reasonLabel = screen.getByText(/Причина отклонения/);
+    const reasonLabel = screen.getByText(/Причина:/);
     const reasonSelect = reasonLabel.parentElement?.querySelector('select') as HTMLSelectElement;
 
     expect(reasonSelect).toBeInTheDocument();
@@ -270,7 +270,7 @@ describe('AddDetail', () => {
     await screen.findByText('Отклонить объявление', {}, { timeout: 200 });
 
     const reasonSelect = screen
-      .getByText(/Причина отклонения/)
+      .getByText(/Причина:/)
       .parentElement?.querySelector('select') as HTMLSelectElement;
     await act(async () => {
       await user.selectOptions(reasonSelect, 'Запрещенный товар');
@@ -300,7 +300,7 @@ describe('AddDetail', () => {
     await screen.findByText('Отклонить объявление', {}, { timeout: 200 });
 
     const reasonSelect = screen
-      .getByText(/Причина отклонения/)
+      .getByText(/Причина:/)
       .parentElement?.querySelector('select') as HTMLSelectElement;
     await act(async () => {
       await user.selectOptions(reasonSelect, 'Другое');
@@ -467,7 +467,7 @@ describe('AddDetail', () => {
     await screen.findByText('Отклонить объявление', {}, { timeout: 200 });
 
     const reasonSelect = screen
-      .getByText(/Причина отклонения/)
+      .getByText(/Причина:/)
       .parentElement?.querySelector('select') as HTMLSelectElement;
     await act(async () => {
       await user.selectOptions(reasonSelect, 'Запрещенный товар');
